@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Service Lines - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Service Lines</h2>
+    <p class="text-muted">View all Starlink terminals and service lines</p>
+</div>
+
+{% if service_lines %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Account Number</th>
+                <th>Service Line ID</th>
+                <th>Nickname</th>
+                <th>Service Line Number</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sl in service_lines %}
+            <tr>
+                <td>{{ sl.id }}</td>
+                <td><code>{{ sl.account_number }}</code></td>
+                <td><code>{{ sl.service_line_id }}</code></td>
+                <td>{{ sl.nickname or 'N/A' }}</td>
+                <td>{{ sl.service_line_number or 'N/A' }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if sl.active else 'secondary' }}">
+                        {{ 'Active' if sl.active else 'Inactive' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('view_usage', service_line_id=sl.service_line_id) }}" class="btn btn-sm btn-primary">View Usage</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-footer">
+    <p>Total: {{ service_lines|length }} service line(s)</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No service lines found</p>
+    <p class="text-muted">Import service lines from CSV or add them via the management CLI</p>
+</div>
+{% endif %}
+{% endblock %}

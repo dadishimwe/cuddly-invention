@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Manage Users</h2>
+    <p class="text-muted">Add and manage team member access</p>
+</div>
+
+<div class="section">
+    <h3>Add New User</h3>
+    <form method="POST" action="{{ url_for('admin_add_user') }}" class="form-inline">
+        <div class="form-row">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <select name="role" required>
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Add User</button>
+        </div>
+    </form>
+</div>
+
+<div class="section">
+    <h3>Current Users</h3>
+
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td><code>{{ user.username }}</code></td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge badge-{{ 'primary' if user.role == 'admin' else 'secondary' }}">{{ user.role }}</span></td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if user.active else 'secondary' }}">
+                            {{ 'Active' if user.active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No users found</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

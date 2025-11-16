@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard</h2>
+    <p class="text-muted">Overview of your Starlink management system</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.total_clients }}</div>
+            <div class="stat-label">Active Clients</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">📡</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.total_service_lines }}</div>
+            <div class="stat-label">Service Lines</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">📧</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.reports_sent_today }}</div>
+            <div class="stat-label">Reports Today</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats.pending_reports }}</div>
+            <div class="stat-label">Pending Reports</div>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h3>Recent Activity</h3>
+        <a href="{{ url_for('reports') }}" class="btn btn-sm btn-secondary">View All</a>
+    </div>
+
+    {% if recent_logs %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Service Line</th>
+                    <th>Recipient</th>
+                    <th>Status</th>
+                    <th>Usage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.sent_at[:16] if log.sent_at else 'N/A' }}</td>
+                    <td><code>{{ log.service_line_id[:20] }}...</code></td>
+                    <td>{{ log.recipient_email }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if log.status == 'sent' else 'warning' if log.status == 'pending' else 'error' }}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                    <td>{{ "%.2f GB"|format(log.total_usage_gb) if log.total_usage_gb else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No recent activity</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+        <a href="{{ url_for('generate_report') }}" class="btn btn-primary">📊 Generate Report</a>
+        <a href="{{ url_for('mappings') }}" class="btn btn-secondary">👥 View Clients</a>
+        <a href="{{ url_for('service_lines') }}" class="btn btn-secondary">📡 View Service Lines</a>
+    </div>
+</div>
+{% endblock %}

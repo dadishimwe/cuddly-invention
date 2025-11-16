@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Usage Data - {{ service_line.nickname or service_line.service_line_id }} - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Usage Data</h2>
+    <p class="text-muted">{{ service_line.nickname or service_line.service_line_id }}</p>
+    <a href="{{ url_for('service_lines') }}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="detail-card">
+    <h3>Service Line Information</h3>
+    <dl class="detail-list">
+        <dt>Service Line ID</dt>
+        <dd><code>{{ service_line.service_line_id }}</code></dd>
+
+        <dt>Nickname</dt>
+        <dd>{{ service_line.nickname or 'N/A' }}</dd>
+
+        <dt>Account Number</dt>
+        <dd><code>{{ service_line.account_number }}</code></dd>
+    </dl>
+</div>
+
+{% if usage_data and usage_data.daily_usage %}
+<div class="section">
+    <h3>Daily Usage Breakdown</h3>
+
+    <div class="usage-summary">
+        <div class="usage-stat">
+            <div class="usage-label">Total Usage</div>
+            <div class="usage-value">{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='usage_gb')) }}</div>
+        </div>
+        <div class="usage-stat">
+            <div class="usage-label">Days Tracked</div>
+            <div class="usage-value">{{ usage_data.daily_usage|length }}</div>
+        </div>
+        <div class="usage-stat">
+            <div class="usage-label">Average per Day</div>
+            <div class="usage-value">{{ "%.2f GB"|format((usage_data.daily_usage|sum(attribute='usage_gb')) / usage_data.daily_usage|length) }}</div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in usage_data.daily_usage %}
+                <tr>
+                    <td>{{ day.date }}</td>
+                    <td><strong>{{ "%.2f GB"|format(day.usage_gb) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-total">
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong>{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='usage_gb')) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No usage data available</p>
+</div>
+{% endif %}
+{% endblock %}

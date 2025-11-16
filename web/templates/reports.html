@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Report Logs - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Report Logs</h2>
+    <p class="text-muted">View history of all sent reports</p>
+</div>
+
+{% if logs %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Sent At</th>
+                <th>Service Line</th>
+                <th>Recipient</th>
+                <th>Type</th>
+                <th>Usage</th>
+                <th>Days</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td>{{ log.sent_at[:16] if log.sent_at else 'N/A' }}</td>
+                <td><code>{{ log.service_line_id[:20] }}...</code></td>
+                <td>{{ log.recipient_email }}</td>
+                <td><span class="badge badge-secondary">{{ log.report_type }}</span></td>
+                <td>{{ "%.2f GB"|format(log.total_usage_gb) if log.total_usage_gb else 'N/A' }}</td>
+                <td>{{ log.days_included or 'N/A' }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if log.status == 'sent' else 'warning' if log.status == 'pending' else 'error' }}">
+                        {{ log.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-footer">
+    <p>Showing {{ logs|length }} most recent log(s)</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No report logs found</p>
+</div>
+{% endif %}
+{% endblock %}

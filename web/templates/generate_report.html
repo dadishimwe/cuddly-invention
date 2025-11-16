@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Report - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Generate Usage Report</h2>
+    <p class="text-muted">Generate and send usage reports to clients</p>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('generate_report') }}" class="report-form">
+        <div class="form-group">
+            <label for="mapping_id">Select Client *</label>
+            <select id="mapping_id" name="mapping_id" required>
+                <option value="">-- Select a client --</option>
+                {% for mapping in mappings %}
+                <option value="{{ mapping.id }}" {% if request.args.get('mapping_id')|int == mapping.id %}selected{% endif %}>
+                    {{ mapping.client_name }} ({{ mapping.service_line_id[:20] }}...)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-section">
+            <h4>Date Range (Optional)</h4>
+            <p class="text-muted">Leave blank to use current billing cycle</p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date">
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="dry_run">
+                Preview only (don't send email)
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </div>
+    </form>
+</div>
+
+{% if mappings|length == 0 %}
+<div class="alert alert-warning">
+    <strong>No active client mappings found.</strong>
+    <p>Please import client mappings from CSV or add them via the management CLI.</p>
+</div>
+{% endif %}
+{% endblock %}

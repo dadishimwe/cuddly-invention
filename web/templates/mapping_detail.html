@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mapping.client_name }} - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>{{ mapping.client_name }}</h2>
+    <div class="header-actions">
+        <a href="{{ url_for('mappings') }}" class="btn btn-secondary">← Back to Clients</a>
+        <a href="{{ url_for('generate_report') }}?mapping_id={{ mapping.id }}" class="btn btn-primary">📊 Generate Report</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <h3>Client Information</h3>
+        <dl class="detail-list">
+            <dt>Client Name</dt>
+            <dd>{{ mapping.client_name }}</dd>
+
+            <dt>Primary Email</dt>
+            <dd>{{ mapping.primary_email }}</dd>
+
+            <dt>CC Emails</dt>
+            <dd>{{ mapping.cc_emails or 'None' }}</dd>
+
+            <dt>Report Frequency</dt>
+            <dd><span class="badge badge-info">{{ mapping.report_frequency }}</span></dd>
+
+            <dt>Status</dt>
+            <dd>
+                <span class="badge badge-{{ 'success' if mapping.active else 'secondary' }}">
+                    {{ 'Active' if mapping.active else 'Inactive' }}
+                </span>
+            </dd>
+
+            <dt>Last Report Sent</dt>
+            <dd>{{ mapping.last_sent_at or 'Never' }}</dd>
+        </dl>
+    </div>
+
+    <div class="detail-card">
+        <h3>Service Line Details</h3>
+        <dl class="detail-list">
+            <dt>Service Line ID</dt>
+            <dd><code>{{ mapping.service_line_id }}</code></dd>
+
+            <dt>Terminal Nickname</dt>
+            <dd>{{ mapping.nickname or 'N/A' }}</dd>
+
+            <dt>Account Number</dt>
+            <dd><code>{{ mapping.account_number }}</code></dd>
+
+            <dt>Created</dt>
+            <dd>{{ mapping.created_at }}</dd>
+
+            <dt>Last Updated</dt>
+            <dd>{{ mapping.updated_at }}</dd>
+        </dl>
+
+        <div class="card-actions">
+            <a href="{{ url_for('view_usage', service_line_id=mapping.service_line_id) }}" class="btn btn-secondary btn-block">
+                📊 View Usage Data
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Report History</h3>
+
+    {% if logs %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sent At</th>
+                    <th>Type</th>
+                    <th>Date Range</th>
+                    <th>Usage</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.sent_at[:16] if log.sent_at else 'N/A' }}</td>
+                    <td><span class="badge badge-secondary">{{ log.report_type }}</span></td>
+                    <td>
+                        {% if log.start_date and log.end_date %}
+                            {{ log.start_date }} to {{ log.end_date }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.2f GB"|format(log.total_usage_gb) if log.total_usage_gb else 'N/A' }}</td>
+                    <td>{{ log.days_included or 'N/A' }}</td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if log.status == 'sent' else 'warning' if log.status == 'pending' else 'error' }}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No reports sent yet</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

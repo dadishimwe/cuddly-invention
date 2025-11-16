@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Client Mappings - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Client Mappings</h2>
+    <p class="text-muted">Manage client email mappings and report settings</p>
+</div>
+
+{% if mappings %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Client Name</th>
+                <th>Service Line</th>
+                <th>Terminal</th>
+                <th>Email</th>
+                <th>Frequency</th>
+                <th>Last Sent</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mapping in mappings %}
+            <tr>
+                <td>{{ mapping.id }}</td>
+                <td><strong>{{ mapping.client_name }}</strong></td>
+                <td><code>{{ mapping.service_line_id[:20] }}...</code></td>
+                <td>{{ mapping.nickname or 'N/A' }}</td>
+                <td>{{ mapping.primary_email }}</td>
+                <td>
+                    <span class="badge badge-info">{{ mapping.report_frequency }}</span>
+                </td>
+                <td>{{ mapping.last_sent_at[:16] if mapping.last_sent_at else 'Never' }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if mapping.active else 'secondary' }}">
+                        {{ 'Active' if mapping.active else 'Inactive' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('mapping_detail', mapping_id=mapping.id) }}" class="btn btn-sm btn-primary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-footer">
+    <p>Total: {{ mappings|length }} mapping(s)</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No client mappings found</p>
+    <p class="text-muted">Import mappings from CSV or add them via the management CLI</p>
+</div>
+{% endif %}
+{% endblock %}
