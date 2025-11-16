@@ -1,0 +1,4 @@
+client_name,service_line_id,primary_email,cc_emails,active,report_frequency
+Acme Corporation,SL-ABC-123-456-78,client@acmecorp.com,"manager@acmecorp.com,billing@acmecorp.com",true,on_demand
+Tech Solutions Inc,SL-ABC-987-654-32,contact@techsolutions.com,admin@techsolutions.com,true,daily
+Remote Site Client,SL-ABC-555-666-77,site@remoteclient.com,,true,weekly

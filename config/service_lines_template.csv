@@ -1,0 +1,4 @@
+account_number,service_line_id,nickname,service_line_number,active
+ACC-12345-67890-12,SL-ABC-123-456-78,Office Terminal 1,1234567890,true
+ACC-12345-67890-12,SL-ABC-987-654-32,Office Terminal 2,0987654321,true
+ACC-12345-67890-12,SL-ABC-555-666-77,Remote Site A,5556667777,true

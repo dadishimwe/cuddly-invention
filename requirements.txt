@@ -1,0 +1,21 @@
+# Starlink Manager Dependencies
+
+# Core dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Database
+# No additional dependencies needed for SQLite (built into Python)
+
+# CLI utilities
+tabulate>=0.9.0
+
+# Web interface
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# Email
+# No additional dependencies needed (smtplib is built into Python)
+
+# Optional: Production WSGI server
+gunicorn>=21.2.0
