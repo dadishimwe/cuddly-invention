@@ -194,6 +194,176 @@ def generate_report():
     return render_template('generate_report.html', mappings=mappings)
 
 
+@app.route('/preview-report/<int:mapping_id>', methods=['GET', 'POST'])
+@login_required
+def preview_report(mapping_id):
+    """Preview email report before sending"""
+    mapping = db.get_client_mapping(mapping_id)
+    if not mapping:
+        flash('Mapping not found', 'error')
+        return redirect(url_for('mappings'))
+    
+    start_date = request.args.get('start_date') or request.form.get('start_date')
+    end_date = request.args.get('end_date') or request.form.get('end_date')
+    
+    try:
+        client = get_starlink_client()
+        from scripts.send_report import EmailReportGenerator
+        generator = EmailReportGenerator(db, client, dry_run=True)
+        
+        # Get usage data
+        usage_data = client.usage.get_live_usage_data(
+            mapping['account_number'],
+            service_lines=[mapping['service_line_id']],
+            cycles_to_fetch=1
+        )
+        
+        sl_data = usage_data.get(mapping['service_line_id'], {})
+        daily_usage = sl_data.get('daily_usage', [])
+        
+        if start_date and end_date:
+            daily_usage = [
+                day for day in daily_usage
+                if start_date <= day.get('date', '') <= end_date
+            ]
+        else:
+            if daily_usage:
+                start_date = daily_usage[0].get('date')
+                end_date = daily_usage[-1].get('date')
+        
+        total_usage_gb = sum(day.get('total_gb', 0) for day in daily_usage)
+        
+        # Generate HTML preview
+        html_content = generator._format_html_email(
+            mapping['client_name'],
+            mapping['service_line_id'],
+            mapping['nickname'],
+            daily_usage,
+            start_date,
+            end_date,
+            total_usage_gb
+        )
+        
+        return render_template('preview_report.html', 
+                             mapping=mapping,
+                             html_content=html_content,
+                             start_date=start_date,
+                             end_date=end_date)
+    except Exception as e:
+        flash(f'Error generating preview: {str(e)}', 'error')
+        return redirect(url_for('mapping_detail', mapping_id=mapping_id))
+
+
+@app.route('/batch-send', methods=['GET', 'POST'])
+@login_required
+def batch_send():
+    """Send reports to multiple clients"""
+    if request.method == 'POST':
+        mapping_ids = request.form.getlist('mapping_ids')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        
+        if not mapping_ids:
+            flash('Please select at least one client', 'error')
+            return redirect(url_for('batch_send'))
+        
+        try:
+            client = get_starlink_client()
+            generator = EmailReportGenerator(db, client, dry_run=False)
+            
+            success_count = 0
+            error_count = 0
+            
+            for mapping_id in mapping_ids:
+                try:
+                    generator.generate_report(int(mapping_id), start_date, end_date)
+                    success_count += 1
+                except Exception as e:
+                    error_count += 1
+                    print(f"Error sending to mapping {mapping_id}: {e}")
+            
+            flash(f'Batch send complete: {success_count} sent, {error_count} failed', 'success' if error_count == 0 else 'warning')
+        except Exception as e:
+            flash(f'Error in batch send: {str(e)}', 'error')
+        
+        return redirect(url_for('reports'))
+    
+    # GET request - show form
+    mappings = db.get_client_mappings(active_only=True)
+    return render_template('batch_send.html', mappings=mappings)
+
+
+@app.route('/edit-mapping/<int:mapping_id>', methods=['GET', 'POST'])
+@login_required
+def edit_mapping(mapping_id):
+    """Edit client mapping"""
+    mapping = db.get_client_mapping(mapping_id)
+    if not mapping:
+        flash('Mapping not found', 'error')
+        return redirect(url_for('mappings'))
+    
+    if request.method == 'POST':
+        try:
+            db.update_client_mapping(
+                mapping_id,
+                client_name=request.form.get('client_name'),
+                primary_email=request.form.get('primary_email'),
+                cc_emails=request.form.get('cc_emails'),
+                report_frequency=request.form.get('report_frequency'),
+                active=request.form.get('active') == 'on'
+            )
+            flash('Client mapping updated successfully', 'success')
+            return redirect(url_for('mapping_detail', mapping_id=mapping_id))
+        except Exception as e:
+            flash(f'Error updating mapping: {str(e)}', 'error')
+    
+    return render_template('edit_mapping.html', mapping=mapping)
+
+
+@app.route('/add-mapping', methods=['GET', 'POST'])
+@login_required
+def add_mapping():
+    """Add new client mapping"""
+    if request.method == 'POST':
+        try:
+            db.add_client_mapping(
+                client_name=request.form.get('client_name'),
+                service_line_id=request.form.get('service_line_id'),
+                primary_email=request.form.get('primary_email'),
+                cc_emails=request.form.get('cc_emails'),
+                active=request.form.get('active', 'on') == 'on',
+                report_frequency=request.form.get('report_frequency', 'on_demand')
+            )
+            flash('Client mapping added successfully', 'success')
+            return redirect(url_for('mappings'))
+        except Exception as e:
+            flash(f'Error adding mapping: {str(e)}', 'error')
+    
+    service_lines = db.get_service_lines(active_only=True)
+    return render_template('add_mapping.html', service_lines=service_lines)
+
+
+@app.route('/add-terminal', methods=['GET', 'POST'])
+@login_required
+def add_terminal():
+    """Add new service line/terminal"""
+    if request.method == 'POST':
+        try:
+            db.add_service_line(
+                account_number=request.form.get('account_number'),
+                service_line_id=request.form.get('service_line_id'),
+                nickname=request.form.get('nickname'),
+                service_line_number=request.form.get('service_line_number'),
+                active=request.form.get('active', 'on') == 'on'
+            )
+            flash('Terminal added successfully', 'success')
+            return redirect(url_for('service_lines'))
+        except Exception as e:
+            flash(f'Error adding terminal: {str(e)}', 'error')
+    
+    return render_template('add_terminal.html')
+
+
 @app.route('/usage/<service_line_id>')
 @login_required
 def view_usage(service_line_id):

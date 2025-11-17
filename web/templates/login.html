@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Starlink Manager</title>
+    <title>Login - Zuba Broadband</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="login-page">
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <h1>🛰️ Starlink Manager</h1>
-                <p>Please sign in to continue</p>
+                <img src="{{ url_for('static', filename='images/zuba-logo.png') }}" alt="Zuba Broadband" class="login-logo">
+                <h1>Zuba Broadband</h1>
+                <p>Starlink Management Portal</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}

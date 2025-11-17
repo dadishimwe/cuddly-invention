@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Preview Report - {{ mapping.client_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>📧 Preview Email Report</h2>
+        <p class="text-muted">Preview report for {{ mapping.client_name }}</p>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-card">
+        <h3>Report Details</h3>
+        <dl class="detail-list">
+            <dt>Client Name</dt>
+            <dd>{{ mapping.client_name }}</dd>
+            
+            <dt>Service Line</dt>
+            <dd>{{ mapping.service_line_id }}</dd>
+            
+            <dt>Primary Email</dt>
+            <dd>{{ mapping.primary_email }}</dd>
+            
+            {% if mapping.cc_emails %}
+            <dt>CC Emails</dt>
+            <dd>{{ mapping.cc_emails }}</dd>
+            {% endif %}
+            
+            <dt>Date Range</dt>
+            <dd>{{ start_date }} to {{ end_date }}</dd>
+        </dl>
+        
+        <div class="card-actions">
+            <form action="{{ url_for('generate_report') }}" method="post" style="display: inline;">
+                <input type="hidden" name="mapping_id" value="{{ mapping.id }}">
+                <input type="hidden" name="start_date" value="{{ start_date }}">
+                <input type="hidden" name="end_date" value="{{ end_date }}">
+                <button type="submit" class="btn btn-success btn-block">
+                    ✉️ Send This Report
+                </button>
+            </form>
+            <a href="{{ url_for('mapping_detail', mapping_id=mapping.id) }}" class="btn btn-secondary btn-block">
+                ← Back to Mapping
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h3>Email Preview</h3>
+    </div>
+    <div style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-lg); background-color: var(--gray-50);">
+        {{ html_content|safe }}
+    </div>
+</div>
+{% endblock %}

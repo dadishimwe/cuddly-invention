@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Client Mapping{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>✏️ Edit Client Mapping</h2>
+        <p class="text-muted">Update client information and email settings</p>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <div class="form-group">
+            <label for="client_name">Client Name *</label>
+            <input type="text" id="client_name" name="client_name" value="{{ mapping.client_name }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="service_line_id">Service Line ID</label>
+            <input type="text" id="service_line_id" value="{{ mapping.service_line_id }}" disabled>
+            <small class="text-muted">Service line cannot be changed. Create a new mapping to use a different terminal.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="primary_email">Primary Email *</label>
+            <input type="email" id="primary_email" name="primary_email" value="{{ mapping.primary_email }}" required>
+            <small class="text-muted">Main recipient for usage reports</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="cc_emails">CC Emails (Optional)</label>
+            <input type="text" id="cc_emails" name="cc_emails" value="{{ mapping.cc_emails or '' }}" placeholder="email1@example.com, email2@example.com">
+            <small class="text-muted">Comma-separated list of additional recipients</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="report_frequency">Report Frequency</label>
+            <select id="report_frequency" name="report_frequency">
+                <option value="on_demand" {% if mapping.report_frequency == 'on_demand' %}selected{% endif %}>On Demand</option>
+                <option value="daily" {% if mapping.report_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly" {% if mapping.report_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if mapping.report_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="active" {% if mapping.active %}checked{% endif %}>
+                Active
+            </label>
+            <small class="text-muted">Inactive mappings won't receive reports</small>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('mapping_detail', mapping_id=mapping.id) }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

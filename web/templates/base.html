@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Starlink Manager{% endblock %}</title>
+    <title>{% block title %}Zuba Broadband - Starlink Manager{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -11,14 +11,16 @@
     {% if session.user_id %}
     <nav class="navbar">
         <div class="container">
-            <div class="nav-brand">
-                <h1>🛰️ Starlink Manager</h1>
-            </div>
+            <a href="{{ url_for('dashboard') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='images/zuba-logo.png') }}" alt="Zuba Broadband" class="nav-brand-logo">
+                <h1>Zuba Broadband</h1>
+            </a>
             <div class="nav-menu">
                 <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
                 <a href="{{ url_for('mappings') }}" class="nav-link {% if request.endpoint in ['mappings', 'mapping_detail'] %}active{% endif %}">Clients</a>
                 <a href="{{ url_for('service_lines') }}" class="nav-link {% if request.endpoint == 'service_lines' %}active{% endif %}">Service Lines</a>
-                <a href="{{ url_for('generate_report') }}" class="nav-link {% if request.endpoint == 'generate_report' %}active{% endif %}">Generate Report</a>
+                <a href="{{ url_for('generate_report') }}" class="nav-link {% if request.endpoint == 'generate_report' %}active{% endif %}">Generate</a>
+                <a href="{{ url_for('batch_send') }}" class="nav-link {% if request.endpoint == 'batch_send' %}active{% endif %}">Batch Send</a>
                 <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}">Logs</a>
                 {% if session.role == 'admin' %}
                 <a href="{{ url_for('admin_users') }}" class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">Users</a>
@@ -53,7 +55,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Starlink Manager. All rights reserved.</p>
+            <p>&copy; 2025 Zuba Broadband. Powered by Starlink Enterprise.</p>
         </div>
     </footer>
 

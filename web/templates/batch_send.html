@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Send Reports{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>📬 Batch Send Reports</h2>
+        <p class="text-muted">Send usage reports to multiple clients at once</p>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="post" id="batchSendForm">
+        <div class="form-section">
+            <h4>Date Range (Optional)</h4>
+            <p class="text-muted">Leave blank to use current billing cycle</p>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="selectAll"> Select All Clients
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label>Select Clients to Send Reports</label>
+            
+            {% if mappings %}
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-md);">
+                {% for mapping in mappings %}
+                <div class="checkbox-label" style="padding: var(--spacing-sm); border-bottom: 1px solid var(--border-color);">
+                    <input type="checkbox" name="mapping_ids" value="{{ mapping.id }}" class="client-checkbox">
+                    <div style="flex: 1;">
+                        <strong>{{ mapping.client_name }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ mapping.service_line_id }} 
+                            {% if mapping.nickname %}({{ mapping.nickname }}){% endif %}
+                            → {{ mapping.primary_email }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No active client mappings found</p>
+                <a href="{{ url_for('add_mapping') }}" class="btn btn-primary">Add Client Mapping</a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('reports') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success" id="sendButton" disabled>
+                📬 Send Reports
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.client-checkbox');
+    const sendButton = document.getElementById('sendButton');
+    const form = document.getElementById('batchSendForm');
+    
+    // Select all functionality
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateSendButton();
+    });
+    
+    // Update send button state
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateSendButton);
+    });
+    
+    function updateSendButton() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        sendButton.disabled = !anyChecked;
+    }
+    
+    // Confirm before sending
+    form.addEventListener('submit', function(e) {
+        const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        if (!confirm(`Are you sure you want to send reports to ${selectedCount} client(s)?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

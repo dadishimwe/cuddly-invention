@@ -4,8 +4,13 @@
 
 {% block content %}
 <div class="page-header">
-    <h2>Service Lines</h2>
-    <p class="text-muted">View all Starlink terminals and service lines</p>
+    <div>
+        <h2>🛰️ Service Lines</h2>
+        <p class="text-muted">View all Starlink terminals and service lines</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="{{ url_for('add_terminal') }}" class="btn btn-success">🛰️ Add Terminal</a>
+    </div>
 </div>
 
 {% if service_lines %}

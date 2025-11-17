@@ -7,7 +7,9 @@
     <h2>{{ mapping.client_name }}</h2>
     <div class="header-actions">
         <a href="{{ url_for('mappings') }}" class="btn btn-secondary">← Back to Clients</a>
-        <a href="{{ url_for('generate_report') }}?mapping_id={{ mapping.id }}" class="btn btn-primary">📊 Generate Report</a>
+        <a href="{{ url_for('edit_mapping', mapping_id=mapping.id) }}" class="btn btn-primary">✏️ Edit Client</a>
+        <a href="{{ url_for('preview_report', mapping_id=mapping.id) }}" class="btn btn-secondary">👁️ Preview Report</a>
+        <a href="{{ url_for('generate_report') }}?mapping_id={{ mapping.id }}" class="btn btn-success">✉️ Send Report</a>
     </div>
 </div>
 

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Add Client Mapping{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>➕ Add Client Mapping</h2>
+        <p class="text-muted">Map a client to a Starlink terminal for usage reporting</p>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <div class="form-group">
+            <label for="client_name">Client Name *</label>
+            <input type="text" id="client_name" name="client_name" required placeholder="e.g., Acme Corporation">
+        </div>
+        
+        <div class="form-group">
+            <label for="service_line_id">Service Line / Terminal *</label>
+            <select id="service_line_id" name="service_line_id" required>
+                <option value="">-- Select a Terminal --</option>
+                {% for sl in service_lines %}
+                <option value="{{ sl.service_line_id }}">
+                    {{ sl.service_line_id }}
+                    {% if sl.nickname %} - {{ sl.nickname }}{% endif %}
+                    ({{ sl.account_number }})
+                </option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">
+                Don't see your terminal? <a href="{{ url_for('add_terminal') }}">Add a new terminal first</a>
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="primary_email">Primary Email *</label>
+            <input type="email" id="primary_email" name="primary_email" required placeholder="client@example.com">
+            <small class="text-muted">Main recipient for usage reports</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="cc_emails">CC Emails (Optional)</label>
+            <input type="text" id="cc_emails" name="cc_emails" placeholder="email1@example.com, email2@example.com">
+            <small class="text-muted">Comma-separated list of additional recipients</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="report_frequency">Report Frequency</label>
+            <select id="report_frequency" name="report_frequency">
+                <option value="on_demand" selected>On Demand</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="active" checked>
+                Active
+            </label>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('mappings') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">➕ Add Client Mapping</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

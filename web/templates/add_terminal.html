@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Add Terminal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>🛰️ Add Starlink Terminal</h2>
+        <p class="text-muted">Add a new Starlink service line to the system</p>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <div class="form-group">
+            <label for="account_number">Account Number *</label>
+            <input type="text" id="account_number" name="account_number" required placeholder="ACC-12345-67890-12">
+            <small class="text-muted">Your Starlink account number</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="service_line_id">Service Line ID *</label>
+            <input type="text" id="service_line_id" name="service_line_id" required placeholder="SL-ABC-123-456-78">
+            <small class="text-muted">Unique identifier for this terminal</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="nickname">Nickname (Optional)</label>
+            <input type="text" id="nickname" name="nickname" placeholder="Office Terminal 1">
+            <small class="text-muted">Friendly name to identify this terminal</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="service_line_number">Service Line Number (Optional)</label>
+            <input type="text" id="service_line_number" name="service_line_number" placeholder="1234567890">
+            <small class="text-muted">Service line number if available</small>
+        </div>
+        
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="active" checked>
+                Active
+            </label>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('service_lines') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">🛰️ Add Terminal</button>
+        </div>
+    </form>
+</div>
+
+<div class="section">
+    <h3>ℹ️ How to Find Your Service Line Information</h3>
+    <p>You can find your service line details by:</p>
+    <ol>
+        <li>Using the Starlink API CLI tool: <code>python3 starlink/starlink_api_cli.py terminals --account YOUR_ACCOUNT_NUMBER</code></li>
+        <li>Checking your Starlink account dashboard</li>
+        <li>Reviewing your Starlink invoice or welcome email</li>
+    </ol>
+</div>
+{% endblock %}
