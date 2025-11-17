@@ -46,6 +46,7 @@ class StarlinkClient:
         """
         Helper for POST requests.
         """
+        self._inject_auth_header()  # ensure fresh token
         url = f"{self.base_url}{endpoint}"
         response = self.session.post(url, json=data)
         print(f"POST {url} with data: {data}")
