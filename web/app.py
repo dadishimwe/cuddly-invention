@@ -231,7 +231,7 @@ def preview_report(mapping_id):
                 start_date = daily_usage[0].get('date')
                 end_date = daily_usage[-1].get('date')
         
-        total_usage_gb = sum(day.get('total_gb', 0) for day in daily_usage)
+        total_usage_gb = sum(day.get('total_gb', day.get('usage_gb', 0)) for day in daily_usage)
         
         # Generate HTML preview
         html_content = generator._format_html_email(

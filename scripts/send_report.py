@@ -94,7 +94,7 @@ class EmailReportGenerator:
                 end_date = daily_usage[-1].get('date')
         
         # Calculate totals
-        total_usage_gb = sum(day.get('total_gb', 0) for day in daily_usage)
+        total_usage_gb = sum(day.get('total_gb', day.get('usage_gb', 0)) for day in daily_usage)
         days_included = len(daily_usage)
         
         print(f"   Date Range: {start_date} to {end_date}")

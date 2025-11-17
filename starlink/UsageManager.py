@@ -89,7 +89,11 @@ class UsageManager:
                 
                 # First, collect existing daily data to avoid duplicates
                 for existing_daily in processed_data[sl_id]["daily_usage"]:
-                    daily_data_dict[existing_daily["date"]] = existing_daily["usage_gb"]
+                    daily_data_dict[existing_daily["date"]] = {
+                        "priority_gb": existing_daily.get("priority_gb", 0),
+                        "standard_gb": existing_daily.get("standard_gb", 0),
+                        "total_gb": existing_daily.get("total_gb", existing_daily.get("usage_gb", 0))
+                    }
                 
                 # Then add new daily data from this cycle
                 for daily in cycle.get("dailyDataUsage", []):
@@ -109,12 +113,16 @@ class UsageManager:
                     actual_priority = max(priority_gb, optin_gb)
                     
                     daily_total = actual_priority + standard_gb + nonbillable_gb
-                    daily_data_dict[date_only_str] = round(daily_total, 2)
+                    daily_data_dict[date_only_str] = {
+                        "priority_gb": round(actual_priority, 2),
+                        "standard_gb": round(standard_gb, 2),
+                        "total_gb": round(daily_total, 2)
+                    }
                 
                 # Convert back to list format
                 processed_data[sl_id]["daily_usage"] = [
-                    {"date": date, "usage_gb": usage} 
-                    for date, usage in daily_data_dict.items()
+                    {"date": date, **usage_data} 
+                    for date, usage_data in daily_data_dict.items()
                 ]
         
         return processed_data

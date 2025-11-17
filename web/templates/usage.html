@@ -30,7 +30,7 @@
     <div class="usage-summary">
         <div class="usage-stat">
             <div class="usage-label">Total Usage</div>
-            <div class="usage-value">{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='usage_gb')) }}</div>
+            <div class="usage-value">{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='total_gb') or usage_data.daily_usage|sum(attribute='usage_gb')) }}</div>
         </div>
         <div class="usage-stat">
             <div class="usage-label">Days Tracked</div>
@@ -38,7 +38,7 @@
         </div>
         <div class="usage-stat">
             <div class="usage-label">Average per Day</div>
-            <div class="usage-value">{{ "%.2f GB"|format((usage_data.daily_usage|sum(attribute='usage_gb')) / usage_data.daily_usage|length) }}</div>
+            <div class="usage-value">{{ "%.2f GB"|format(((usage_data.daily_usage|sum(attribute='total_gb') or usage_data.daily_usage|sum(attribute='usage_gb')) / usage_data.daily_usage|length)) }}</div>
         </div>
     </div>
 
@@ -47,6 +47,10 @@
             <thead>
                 <tr>
                     <th>Date</th>
+                    {% if usage_data.daily_usage[0].priority_gb is defined %}
+                    <th>Priority Data</th>
+                    <th>Standard Data</th>
+                    {% endif %}
                     <th>Total</th>
                 </tr>
             </thead>
@@ -54,14 +58,22 @@
                 {% for day in usage_data.daily_usage %}
                 <tr>
                     <td>{{ day.date }}</td>
-                    <td><strong>{{ "%.2f GB"|format(day.usage_gb) }}</strong></td>
+                    {% if day.priority_gb is defined %}
+                    <td>{{ "%.2f GB"|format(day.priority_gb) }}</td>
+                    <td>{{ "%.2f GB"|format(day.standard_gb) }}</td>
+                    {% endif %}
+                    <td><strong>{{ "%.2f GB"|format(day.total_gb or day.usage_gb) }}</strong></td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr class="table-total">
                     <td><strong>TOTAL</strong></td>
-                    <td><strong>{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='usage_gb')) }}</strong></td>
+                    {% if usage_data.daily_usage[0].priority_gb is defined %}
+                    <td><strong>{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='priority_gb')) }}</strong></td>
+                    <td><strong>{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='standard_gb')) }}</strong></td>
+                    {% endif %}
+                    <td><strong>{{ "%.2f GB"|format(usage_data.daily_usage|sum(attribute='total_gb') or usage_data.daily_usage|sum(attribute='usage_gb')) }}</strong></td>
                 </tr>
             </tfoot>
         </table>
