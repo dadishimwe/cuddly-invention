@@ -1,0 +1,63 @@
+{% extends "client_portal/base.html" %}
+
+{% block title %}Reports - Zuba Broadband Client Portal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>📊 Usage Reports</h2>
+        <p class="text-muted">View your historical usage reports</p>
+    </div>
+</div>
+
+{% if reports %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Sent Date</th>
+                <th>Service Line</th>
+                <th>Period</th>
+                <th>Total Usage</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.sent_at[:16] if report.sent_at else 'N/A' }}</td>
+                <td>
+                    <code style="font-size: 12px;">{{ report.service_line_id[:30] }}...</code>
+                </td>
+                <td>
+                    {% if report.start_date and report.end_date %}
+                        {{ report.start_date }} to {{ report.end_date }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if report.total_usage_gb %}
+                        <strong>{{ "%.2f"|format(report.total_usage_gb) }} GB</strong>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-{{ 'success' if report.status == 'sent' else 'warning' if report.status == 'pending' else 'error' }}">
+                        {{ report.status|title }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📧</div>
+    <p>No reports have been sent yet</p>
+    <p class="text-muted">Reports will appear here once they are generated</p>
+</div>
+{% endif %}
+{% endblock %}

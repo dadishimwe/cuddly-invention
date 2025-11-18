@@ -1,0 +1,268 @@
+{% extends "client_portal/base.html" %}
+
+{% block title %}Usage Details - {{ service_line.nickname or 'Terminal' }} - Zuba Broadband{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm" style="margin-bottom: var(--spacing-sm);">
+            ← Back to Dashboard
+        </a>
+        <h2>{{ service_line.nickname or 'Starlink Terminal' }}</h2>
+        <p class="text-muted">{{ service_line.service_line_id }}</p>
+    </div>
+</div>
+
+<!-- Billing Cycle Selector -->
+{% if cycles %}
+<div class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md);">
+        <h3 style="margin: 0;">Usage Data</h3>
+        <div class="form-group" style="margin: 0; min-width: 250px;">
+            <label for="cycle-selector" style="font-size: 13px; margin-bottom: 4px;">Select Billing Cycle:</label>
+            <select id="cycle-selector" class="form-control" onchange="window.location.href='{{ url_for('usage_details', service_line_id=service_line.service_line_id) }}?cycle=' + this.value">
+                {% for cycle in cycles %}
+                <option value="{{ cycle.billing_cycle_start }}" 
+                        {% if selected_cycle and cycle.billing_cycle_start == selected_cycle.billing_cycle_start %}selected{% endif %}>
+                    {{ cycle.billing_cycle_start }} to {{ cycle.billing_cycle_end }} 
+                    ({{ "%.1f"|format(cycle.total_usage_gb) }} GB)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Usage Summary -->
+{% if selected_cycle %}
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+    <div class="stat-card-compact">
+        <div class="stat-label">Total Usage</div>
+        <div class="stat-value" style="color: #eb6e34;">{{ "%.2f"|format(selected_cycle.total_usage_gb) }} GB</div>
+    </div>
+    
+    <div class="stat-card-compact">
+        <div class="stat-label">Priority Data</div>
+        <div class="stat-value" style="color: #060352;">{{ "%.2f"|format(selected_cycle.total_priority_gb) }} GB</div>
+    </div>
+    
+    <div class="stat-card-compact">
+        <div class="stat-label">Standard Data</div>
+        <div class="stat-value" style="color: #6b7280;">{{ "%.2f"|format(selected_cycle.total_standard_gb) }} GB</div>
+    </div>
+    
+    <div class="stat-card-compact">
+        <div class="stat-label">Days in Cycle</div>
+        <div class="stat-value">{{ selected_cycle.days_count }}</div>
+    </div>
+    
+    <div class="stat-card-compact">
+        <div class="stat-label">Avg. Daily Usage</div>
+        <div class="stat-value">{{ "%.2f"|format(selected_cycle.total_usage_gb / selected_cycle.days_count) }} GB</div>
+    </div>
+</div>
+
+<!-- Usage Chart -->
+<div class="section">
+    <div class="card">
+        <div class="card-header">
+            <h4>Daily Usage Chart</h4>
+        </div>
+        <div class="card-body">
+            <canvas id="usageChart" style="max-height: 400px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Usage Table -->
+<div class="section">
+    <h3>Daily Breakdown</h3>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th style="text-align: right;">Priority (GB)</th>
+                    <th style="text-align: right;">Standard (GB)</th>
+                    <th style="text-align: right;">Total (GB)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in daily_usage %}
+                <tr>
+                    <td>{{ day.usage_date }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(day.priority_gb) }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(day.standard_gb) }}</td>
+                    <td style="text-align: right;"><strong>{{ "%.2f"|format(day.total_gb) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 600; background: var(--bg-secondary);">
+                    <td>TOTAL</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(selected_cycle.total_priority_gb) }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(selected_cycle.total_standard_gb) }}</td>
+                    <td style="text-align: right;"><strong>{{ "%.2f"|format(selected_cycle.total_usage_gb) }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📊</div>
+    <p>No usage data available for this terminal</p>
+    <p class="text-muted">Usage data will appear here once your terminal is active</p>
+</div>
+{% endif %}
+
+<!-- Installation Info -->
+{% if installation %}
+<div class="section">
+    <h3>Installation Details</h3>
+    <div class="card">
+        <div class="card-body">
+            <div class="detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                <div>
+                    <div class="text-muted" style="font-size: 13px; margin-bottom: 4px;">Installation Date</div>
+                    <div style="font-weight: 500;">{{ installation.installation_date }}</div>
+                </div>
+                
+                {% if installation.technician_name %}
+                <div>
+                    <div class="text-muted" style="font-size: 13px; margin-bottom: 4px;">Installed By</div>
+                    <div style="font-weight: 500;">{{ installation.technician_name }}</div>
+                </div>
+                {% endif %}
+                
+                {% if installation.peplink_router_installed %}
+                <div>
+                    <div class="text-muted" style="font-size: 13px; margin-bottom: 4px;">Peplink Router</div>
+                    <div style="font-weight: 500;">
+                        {{ installation.peplink_model or 'Installed' }}
+                        {% if installation.peplink_serial_number %}
+                        <br><span class="text-muted" style="font-size: 12px;">SN: {{ installation.peplink_serial_number }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if installation.installation_address %}
+                <div style="grid-column: 1 / -1;">
+                    <div class="text-muted" style="font-size: 13px; margin-bottom: 4px;">Installation Address</div>
+                    <div style="font-weight: 500;">{{ installation.installation_address }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.stat-card-compact {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.stat-card-compact .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.stat-card-compact .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if daily_usage %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('usageChart').getContext('2d');
+    
+    const labels = {{ [day.usage_date for day in daily_usage]|tojson }};
+    const priorityData = {{ [day.priority_gb for day in daily_usage]|tojson }};
+    const standardData = {{ [day.standard_gb for day in daily_usage]|tojson }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Priority Data (GB)',
+                    data: priorityData,
+                    borderColor: '#eb6e34',
+                    backgroundColor: 'rgba(235, 110, 52, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Standard Data (GB)',
+                    data: standardData,
+                    borderColor: '#060352',
+                    backgroundColor: 'rgba(6, 3, 82, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' GB';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Usage (GB)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

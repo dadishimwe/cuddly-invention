@@ -1,0 +1,118 @@
+{% extends "client_portal/base.html" %}
+
+{% block title %}Account Settings - Zuba Broadband Client Portal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>⚙️ Account Settings</h2>
+        <p class="text-muted">Manage your account and preferences</p>
+    </div>
+</div>
+
+<div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xl);">
+    <!-- Account Information -->
+    <div class="section">
+        <h3>Account Information</h3>
+        <div class="card">
+            <div class="card-body">
+                <dl class="detail-list">
+                    <dt>Company Name</dt>
+                    <dd>{{ client.company_name }}</dd>
+                    
+                    <dt>Your Name</dt>
+                    <dd>{{ account.name }}</dd>
+                    
+                    <dt>Email Address</dt>
+                    <dd>{{ account.email }}</dd>
+                    
+                    <dt>Account Status</dt>
+                    <dd>
+                        <span class="badge badge-{{ 'success' if account.active else 'secondary' }}">
+                            {{ 'Active' if account.active else 'Inactive' }}
+                        </span>
+                    </dd>
+                    
+                    <dt>Last Login</dt>
+                    <dd>{{ account.last_login[:16] if account.last_login else 'Never' }}</dd>
+                    
+                    <dt>Service Status</dt>
+                    <dd>
+                        <span class="badge badge-{{ 'success' if client.status == 'active' else 'warning' if client.status == 'suspended' else 'error' }}">
+                            {{ client.status|title }}
+                        </span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Change Password -->
+    <div class="section">
+        <h3>Change Password</h3>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('account_settings') }}">
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password" required minlength="8" class="form-control">
+                        <small class="text-muted">Minimum 8 characters</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required minlength="8" class="form-control">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Information -->
+{% if client.service_address or client.billing_address %}
+<div class="section" style="margin-top: var(--spacing-xl);">
+    <h3>Service Details</h3>
+    <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+        {% if client.service_address %}
+        <div class="card">
+            <div class="card-header">
+                <h4>Service Address</h4>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ client.service_address }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if client.billing_address %}
+        <div class="card">
+            <div class="card-header">
+                <h4>Billing Address</h4>
+            </div>
+            <div class="card-body">
+                <p style="white-space: pre-line;">{{ client.billing_address }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<style>
+@media (max-width: 968px) {
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

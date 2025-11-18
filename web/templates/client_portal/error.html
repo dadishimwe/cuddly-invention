@@ -1,0 +1,25 @@
+{% extends "client_portal/base.html" %}
+
+{% block title %}Error {{ error_code }} - Zuba Broadband{% endblock %}
+
+{% block content %}
+<div class="empty-state" style="padding: var(--spacing-xxl) 0;">
+    <div class="empty-state-icon" style="font-size: 80px;">
+        {% if error_code == 404 %}
+            🔍
+        {% elif error_code == 403 %}
+            🔒
+        {% else %}
+            ⚠️
+        {% endif %}
+    </div>
+    <h2>Error {{ error_code }}</h2>
+    <p style="font-size: 18px; margin: var(--spacing-lg) 0;">{{ error_message }}</p>
+    
+    <div style="margin-top: var(--spacing-xl);">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+            🏠 Go to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
