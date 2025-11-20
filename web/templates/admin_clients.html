@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Client Management - Starlink Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>👥 Client Management</h2>
+        <p class="text-muted">View all clients, their service lines, and portal accounts</p>
+    </div>
+</div>
+
+<div class="mb-3">
+    <div class="search-wrapper">
+        <input type="text" id="clientSearch" class="search-input" placeholder="Search clients, service lines, contacts, or emails...">
+    </div>
+</div>
+
+{% if clients %}
+<div class="clients-list" id="clientsList">
+    {% for client in clients %}
+    {% set search_text = client.company_name|lower %}
+    {% if client.primary_contact %}
+        {% if client.primary_contact.email %}{% set search_text = search_text + ' ' + client.primary_contact.email|lower %}{% endif %}
+        {% if client.primary_contact.name %}{% set search_text = search_text + ' ' + client.primary_contact.name|lower %}{% endif %}
+        {% if client.primary_contact.phone %}{% set search_text = search_text + ' ' + client.primary_contact.phone|lower %}{% endif %}
+    {% endif %}
+    {% for sl in client.service_lines %}
+        {% set search_text = search_text + ' ' + sl.service_line_id|lower %}
+        {% if sl.nickname %}{% set search_text = search_text + ' ' + sl.nickname|lower %}{% endif %}
+    {% endfor %}
+    {% for acc in client.accounts %}
+        {% set search_text = search_text + ' ' + acc.email|lower %}
+        {% if acc.name %}{% set search_text = search_text + ' ' + acc.name|lower %}{% endif %}
+    {% endfor %}
+    <div class="card mb-4 client-card" data-search="{{ search_text }}">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0">{{ client.company_name }}</h3>
+                    <small class="text-muted">
+                        Status: <span class="badge badge-{{ 'success' if client.status == 'active' else 'secondary' }}">
+                            {{ client.status|title }}
+                        </span>
+                    </small>
+                </div>
+                <div class="text-right">
+                    <div class="stat-item">
+                        <strong>{{ client.service_lines_count }}</strong> Terminal{{ 's' if client.service_lines_count != 1 else '' }}
+                    </div>
+                    <div class="stat-item">
+                        <strong>{{ client.accounts_count }}</strong> Account{{ 's' if client.accounts_count != 1 else '' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Primary Contact -->
+            {% if client.primary_contact %}
+            <div class="mb-3">
+                <strong>Primary Contact:</strong>
+                {{ client.primary_contact.name }}
+                {% if client.primary_contact.email %}
+                    <a href="mailto:{{ client.primary_contact.email }}">{{ client.primary_contact.email }}</a>
+                {% endif %}
+                {% if client.primary_contact.phone %}
+                    | {{ client.primary_contact.phone }}
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Service Lines -->
+            <div class="mb-3">
+                <h5>Service Lines / Terminals ({{ client.service_lines_count }})</h5>
+                {% if client.service_lines %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Service Line ID</th>
+                                <th>Nickname</th>
+                                <th>Account Number</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sl in client.service_lines %}
+                            <tr>
+                                <td><code>{{ sl.service_line_id }}</code></td>
+                                <td>{{ sl.nickname or 'N/A' }}</td>
+                                <td><code>{{ sl.account_number }}</code></td>
+                                <td>
+                                    <span class="badge badge-{{ 'success' if sl.active else 'secondary' }}">
+                                        {{ 'Active' if sl.active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_usage', service_line_id=sl.service_line_id) }}" 
+                                       class="btn btn-sm btn-primary">View Usage</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No service lines assigned</p>
+                {% endif %}
+            </div>
+            
+            <!-- Portal Accounts -->
+            <div>
+                <h5>Portal Accounts ({{ client.accounts_count }})</h5>
+                {% if client.accounts %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in client.accounts %}
+                            <tr>
+                                <td>{{ account.email }}</td>
+                                <td>{{ account.name or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'success' if account.active else 'secondary' }}">
+                                        {{ 'Active' if account.active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if account.last_login %}
+                                        {{ account.last_login[:10] }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ account.created_at[:10] if account.created_at else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No portal accounts created</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="table-footer">
+    <p id="clientCount">Total: {{ clients|length }} client{{ 's' if clients|length != 1 else '' }}</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No clients found</p>
+    <p class="text-muted">Clients will appear here after migration or manual creation</p>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('clientSearch');
+    const clientsList = document.getElementById('clientsList');
+    
+    if (searchInput && clientsList) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const cards = clientsList.querySelectorAll('.client-card');
+            
+            cards.forEach(card => {
+                const searchData = card.getAttribute('data-search') || '';
+                if (searchData.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Update count
+            const visibleCount = Array.from(cards).filter(c => c.style.display !== 'none').length;
+            const countElement = document.getElementById('clientCount');
+            if (countElement) {
+                countElement.textContent = `Showing ${visibleCount} of ${cards.length} client${cards.length !== 1 ? 's' : ''}${searchTerm ? ` (filtered by "${searchTerm}")` : ''}`;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

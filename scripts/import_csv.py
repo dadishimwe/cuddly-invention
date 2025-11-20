@@ -84,8 +84,15 @@ def import_client_mappings(csv_path: str, db: Database):
     
     CSV Format:
     client_name,service_line_id,primary_email,cc_emails,active,report_frequency
+    
+    NOTE: This imports to the legacy client_mappings table.
+    For v2 features (multi-kit, installations, portal accounts), use:
+    python3 scripts/import_clients_v2.py instead
     """
     print(f"📥 Importing client mappings from {csv_path}...")
+    print("ℹ️  Note: Using legacy client_mappings table.")
+    print("   For v2 features, use: python3 scripts/import_clients_v2.py")
+    print()
     
     imported = 0
     skipped = 0
@@ -96,6 +103,11 @@ def import_client_mappings(csv_path: str, db: Database):
         
         for row in reader:
             try:
+                # Normalize fields
+                for key in list(row.keys()):
+                    if isinstance(row[key], str):
+                        row[key] = row[key].strip()
+                
                 # Check if service line exists
                 service_line = db.get_service_line(row['service_line_id'])
                 if not service_line:
@@ -123,6 +135,8 @@ def import_client_mappings(csv_path: str, db: Database):
                 errors += 1
     
     print(f"\n📊 Summary: {imported} imported, {skipped} skipped, {errors} errors")
+    print("\n💡 Tip: These mappings work with both v1 and v2 databases.")
+    print("   They're kept for backward compatibility.")
     return imported, skipped, errors
 
 

@@ -61,13 +61,50 @@ class DatabaseMigration:
                     print("Migration cancelled")
                     return
             
-            # Step 4: Load new schema
+            # Step 3.5: Alter existing tables FIRST (before loading schema)
+            print("\n🔧 Updating existing table structures...")
+            try:
+                # Check if client_mappings exists and doesn't have client_id
+                cursor.execute("PRAGMA table_info(client_mappings)")
+                columns = [row[1] for row in cursor.fetchall()]
+                if 'client_id' not in columns:
+                    cursor.execute("ALTER TABLE client_mappings ADD COLUMN client_id INTEGER")
+                    print("  ✓ Added client_id to client_mappings")
+                else:
+                    print("  ℹ️  client_mappings already has client_id column")
+            except sqlite3.OperationalError as e:
+                if "no such table" not in str(e).lower():
+                    raise
+                print("  ℹ️  client_mappings table doesn't exist yet (will be created)")
+            
+            try:
+                # Check if report_logs exists and doesn't have client_id
+                cursor.execute("PRAGMA table_info(report_logs)")
+                columns = [row[1] for row in cursor.fetchall()]
+                if 'client_id' not in columns:
+                    cursor.execute("ALTER TABLE report_logs ADD COLUMN client_id INTEGER")
+                    print("  ✓ Added client_id to report_logs")
+                else:
+                    print("  ℹ️  report_logs already has client_id column")
+            except sqlite3.OperationalError as e:
+                if "no such table" not in str(e).lower():
+                    raise
+                print("  ℹ️  report_logs table doesn't exist yet (will be created)")
+            
+            conn.commit()
+            print("✅ Table structures updated")
+            
+            # Step 4: Load new schema (now that existing tables are updated)
             print("\n📋 Loading new schema...")
+            # Temporarily disable foreign key checks to avoid issues during schema loading
+            cursor.execute("PRAGMA foreign_keys = OFF")
             schema_path = os.path.join(os.path.dirname(__file__), 'schema_v2.sql')
             with open(schema_path, 'r') as f:
                 schema_sql = f.read()
             
             cursor.executescript(schema_sql)
+            # Re-enable foreign keys
+            cursor.execute("PRAGMA foreign_keys = ON")
             conn.commit()
             print("✅ New schema loaded")
             

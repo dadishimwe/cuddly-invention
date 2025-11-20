@@ -130,10 +130,64 @@ def dashboard():
     
     for sl in service_lines:
         try:
-            # Get recent usage data
+            # Try to get usage from historical data first
             cycles = db.get_usage_summary_by_cycle(sl['service_line_id'])
             
-            if cycles:
+            # If no historical data, fetch from API (like admin does)
+            if not cycles:
+                try:
+                    usage_data = starlink_client.usage.get_live_usage_data(
+                        sl['account_number'],
+                        service_lines=[sl['service_line_id']],
+                        cycles_to_fetch=1
+                    )
+                    
+                    sl_data = usage_data.get(sl['service_line_id'], {})
+                    daily_usage = sl_data.get('daily_usage', [])
+                    
+                    if daily_usage:
+                        # Calculate totals from API data
+                        total_usage = sum(day.get('total_gb', day.get('usage_gb', 0)) for day in daily_usage)
+                        cycle_start = sl_data.get('billing_cycle_start_date')
+                        cycle_end = sl_data.get('billing_cycle_end_date')
+                        
+                        usage_summaries.append({
+                            'service_line_id': sl['service_line_id'],
+                            'nickname': sl['nickname'] or 'Unnamed Terminal',
+                            'account_number': sl['account_number'],
+                            'total_usage_gb': total_usage,
+                            'cycle_start': cycle_start,
+                            'cycle_end': cycle_end,
+                            'days_count': len(daily_usage),
+                            'source': 'api'
+                        })
+                        total_usage_all_kits += total_usage
+                    else:
+                        usage_summaries.append({
+                            'service_line_id': sl['service_line_id'],
+                            'nickname': sl['nickname'] or 'Unnamed Terminal',
+                            'account_number': sl['account_number'],
+                            'total_usage_gb': 0,
+                            'cycle_start': None,
+                            'cycle_end': None,
+                            'days_count': 0,
+                            'source': 'none'
+                        })
+                except Exception as api_error:
+                    print(f"Error fetching from API for {sl['service_line_id']}: {api_error}")
+                    usage_summaries.append({
+                        'service_line_id': sl['service_line_id'],
+                        'nickname': sl['nickname'] or 'Unnamed Terminal',
+                        'account_number': sl['account_number'],
+                        'total_usage_gb': 0,
+                        'cycle_start': None,
+                        'cycle_end': None,
+                        'days_count': 0,
+                        'source': 'error',
+                        'error': str(api_error)
+                    })
+            else:
+                # Use historical data
                 latest_cycle = cycles[0]
                 usage_summaries.append({
                     'service_line_id': sl['service_line_id'],
@@ -142,19 +196,10 @@ def dashboard():
                     'total_usage_gb': latest_cycle['total_usage_gb'],
                     'cycle_start': latest_cycle['billing_cycle_start'],
                     'cycle_end': latest_cycle['billing_cycle_end'],
-                    'days_count': latest_cycle['days_count']
+                    'days_count': latest_cycle['days_count'],
+                    'source': 'historical'
                 })
                 total_usage_all_kits += latest_cycle['total_usage_gb']
-            else:
-                usage_summaries.append({
-                    'service_line_id': sl['service_line_id'],
-                    'nickname': sl['nickname'] or 'Unnamed Terminal',
-                    'account_number': sl['account_number'],
-                    'total_usage_gb': 0,
-                    'cycle_start': None,
-                    'cycle_end': None,
-                    'days_count': 0
-                })
         except Exception as e:
             print(f"Error fetching usage for {sl['service_line_id']}: {e}")
             usage_summaries.append({
@@ -165,6 +210,7 @@ def dashboard():
                 'cycle_start': None,
                 'cycle_end': None,
                 'days_count': 0,
+                'source': 'error',
                 'error': str(e)
             })
     
@@ -223,6 +269,20 @@ def usage_details(service_line_id):
             start_date=cycle['billing_cycle_start'],
             end_date=cycle['billing_cycle_end']
         )
+    
+    # If no historical data, fetch from API
+    if not daily_usage:
+        try:
+            usage_data = starlink_client.usage.get_live_usage_data(
+                service_line['account_number'],
+                service_lines=[service_line_id],
+                cycles_to_fetch=1
+            )
+            sl_data = usage_data.get(service_line_id, {})
+            daily_usage = sl_data.get('daily_usage', [])
+        except Exception as e:
+            print(f"Error fetching from API: {e}")
+            daily_usage = []
     
     # Get installation info
     installation = db.get_installation(service_line_id)

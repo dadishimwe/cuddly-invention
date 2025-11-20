@@ -124,13 +124,31 @@ Required configuration:
 
 5. **Import your data**
 
+**Option A: Quick Setup (Legacy Format - Still Works)**
 ```bash
 # Import service lines
 python3 scripts/import_csv.py service-lines config/service_lines.csv
 
-# Import client mappings
+# Import client mappings (legacy format - works with v1 and v2)
 python3 scripts/import_csv.py client-mappings config/client_mappings.csv
 ```
+
+**Option B: Full v2 Setup (Recommended - More Features)**
+```bash
+# Import service lines
+python3 scripts/import_csv.py service-lines config/service_lines.csv
+
+# Import clients with v2 features (multi-kit, installations, portal accounts)
+python3 scripts/import_clients_v2.py config/clients_import.csv
+```
+
+**Or use the setup wizard:**
+```bash
+python3 scripts/setup.py
+```
+This will detect your current state and guide you through setup.
+
+**Note:** The legacy `client_mappings.csv` format still works on both v1 and v2 databases for backward compatibility.
 
 6. **Start the web interface**
 

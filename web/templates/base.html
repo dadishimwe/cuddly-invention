@@ -15,7 +15,10 @@
                 <img src="{{ url_for('static', filename='images/zuba-logo.png') }}" alt="Zuba Broadband" class="nav-brand-logo">
                 <h1>Zuba Broadband</h1>
             </a>
-            <div class="nav-menu">
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                ☰
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
                 <a href="{{ url_for('mappings') }}" class="nav-link {% if request.endpoint in ['mappings', 'mapping_detail'] %}active{% endif %}">Clients</a>
                 <a href="{{ url_for('service_lines') }}" class="nav-link {% if request.endpoint == 'service_lines' %}active{% endif %}">Service Lines</a>
@@ -23,6 +26,7 @@
                 <a href="{{ url_for('batch_send') }}" class="nav-link {% if request.endpoint == 'batch_send' %}active{% endif %}">Batch Send</a>
                 <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}">Logs</a>
                 {% if session.role == 'admin' %}
+                <a href="{{ url_for('admin_clients') }}" class="nav-link {% if request.endpoint == 'admin_clients' %}active{% endif %}">Clients</a>
                 <a href="{{ url_for('admin_users') }}" class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">Users</a>
                 {% endif %}
             </div>

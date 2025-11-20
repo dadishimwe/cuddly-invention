@@ -13,6 +13,12 @@
     </div>
 </div>
 
+<div class="mb-3">
+    <div class="search-wrapper">
+        <input type="text" id="mappingSearch" class="search-input" placeholder="Search by client name, service line, email, or nickname...">
+    </div>
+</div>
+
 {% if mappings %}
 <div class="table-responsive">
     <table class="table">
@@ -29,9 +35,9 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="mappingsTableBody">
             {% for mapping in mappings %}
-            <tr>
+            <tr class="mapping-row" data-search="{{ (mapping.client_name + ' ' + mapping.service_line_id + ' ' + (mapping.nickname or '') + ' ' + mapping.primary_email + ' ' + mapping.report_frequency).lower() }}">
                 <td>{{ mapping.id }}</td>
                 <td><strong>{{ mapping.client_name }}</strong></td>
                 <td><code>{{ mapping.service_line_id[:20] }}...</code></td>
@@ -57,7 +63,7 @@
 </div>
 
 <div class="table-footer">
-    <p>Total: {{ mappings|length }} mapping(s)</p>
+    <p id="mappingCount">Total: {{ mappings|length }} mapping(s)</p>
 </div>
 {% else %}
 <div class="empty-state">
@@ -65,4 +71,34 @@
     <p class="text-muted">Import mappings from CSV or add them via the management CLI</p>
 </div>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('mappingSearch');
+    const tableBody = document.getElementById('mappingsTableBody');
+    const countElement = document.getElementById('mappingCount');
+    
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const rows = tableBody.querySelectorAll('.mapping-row');
+            
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const searchData = row.getAttribute('data-search') || '';
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            if (countElement) {
+                countElement.textContent = `Showing ${visibleCount} of ${rows.length} mapping${rows.length !== 1 ? 's' : ''}${searchTerm ? ` (filtered by "${searchTerm}")` : ''}`;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -13,6 +13,12 @@
     </div>
 </div>
 
+<div class="mb-3">
+    <div class="search-wrapper">
+        <input type="text" id="serviceLineSearch" class="search-input" placeholder="Search by account number, service line ID, nickname, or number...">
+    </div>
+</div>
+
 {% if service_lines %}
 <div class="table-responsive">
     <table class="table">
@@ -27,9 +33,9 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="serviceLinesTableBody">
             {% for sl in service_lines %}
-            <tr>
+            <tr class="service-line-row" data-search="{{ (sl.account_number + ' ' + sl.service_line_id + ' ' + (sl.nickname or '') + ' ' + (sl.service_line_number or '') + ' ' + ('active' if sl.active else 'inactive')).lower() }}">
                 <td>{{ sl.id }}</td>
                 <td><code>{{ sl.account_number }}</code></td>
                 <td><code>{{ sl.service_line_id }}</code></td>
@@ -50,7 +56,7 @@
 </div>
 
 <div class="table-footer">
-    <p>Total: {{ service_lines|length }} service line(s)</p>
+    <p id="serviceLineCount">Total: {{ service_lines|length }} service line(s)</p>
 </div>
 {% else %}
 <div class="empty-state">
@@ -58,4 +64,34 @@
     <p class="text-muted">Import service lines from CSV or add them via the management CLI</p>
 </div>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('serviceLineSearch');
+    const tableBody = document.getElementById('serviceLinesTableBody');
+    const countElement = document.getElementById('serviceLineCount');
+    
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const rows = tableBody.querySelectorAll('.service-line-row');
+            
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const searchData = row.getAttribute('data-search') || '';
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            if (countElement) {
+                countElement.textContent = `Showing ${visibleCount} of ${rows.length} service line${rows.length !== 1 ? 's' : ''}${searchTerm ? ` (filtered by "${searchTerm}")` : ''}`;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

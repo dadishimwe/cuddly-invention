@@ -97,6 +97,8 @@ body {
     padding-top: var(--spacing-md);
     padding-bottom: var(--spacing-md);
     gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    position: relative;
 }
 
 .nav-brand {
@@ -123,6 +125,12 @@ body {
     gap: var(--spacing-xs);
     flex: 1;
     justify-content: center;
+}
+
+@media (max-width: 1024px) {
+    .nav-menu {
+        display: none;
+    }
 }
 
 .nav-link {
@@ -170,6 +178,11 @@ body {
 /* Page Header */
 .page-header {
     margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
 }
 
 .page-header h2 {
@@ -913,22 +926,97 @@ code {
     }
 }
 
-@media (max-width: 768px) {
-    .navbar .container {
-        flex-wrap: wrap;
+@media (max-width: 1024px) {
+    .nav-toggle {
+        display: block !important;
+        order: 2;
+        margin-left: auto;
+    }
+    
+    .nav-user {
+        order: 3;
     }
     
     .nav-menu {
-        order: 3;
+        display: none !important;
+        order: 4;
         width: 100%;
         flex-direction: column;
         gap: var(--spacing-xs);
         margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+        background-color: var(--white);
+        animation: slideDown 0.2s ease-out;
+    }
+    
+    .nav-menu.active {
+        display: flex !important;
     }
     
     .nav-link {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block !important;
+    }
+    
+    .navbar .container {
+        flex-wrap: wrap;
+        position: relative;
+    }
+    
+    .nav-user {
+        order: 3;
+    }
+    
+    .nav-menu {
+        order: 4;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+    .nav-user {
+        margin-left: auto;
+    }
+    
+    .nav-user .user-name {
+        display: none;
+    }
+    
+    .search-input,
+    .search-wrapper {
+        max-width: 100%;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .page-header-actions {
+        width: 100%;
+        margin-top: var(--spacing-md);
+    }
+    
+    .page-header-actions .btn {
+        width: 100%;
     }
     
     .stats-grid {
@@ -989,6 +1077,70 @@ code {
     .form-inline select {
         width: 100%;
     }
+}
+
+/* Search Input - Consistent with Theme */
+.search-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 500px;
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-left: 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    transition: all var(--transition-base);
+    background-color: var(--white);
+    color: var(--text-primary);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 3px rgba(235, 110, 52, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-wrapper::before {
+    content: '🔍';
+    position: absolute;
+    left: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+    line-height: 1;
+}
+
+/* Responsive Navigation */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    line-height: 1;
+    transition: color var(--transition-fast);
+}
+
+.nav-toggle:hover {
+    color: var(--primary-orange);
+}
+
+.nav-toggle:focus {
+    outline: none;
 }
 
 /* Utility Classes */

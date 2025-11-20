@@ -28,33 +28,68 @@
 
 <div class="section">
     <h3>Current Users</h3>
+    <p class="text-muted">Team members and client portal users</p>
+
+    <div class="mb-3">
+        <div class="search-wrapper">
+            <input type="text" id="userSearch" class="search-input" placeholder="Search by username, name, email, role, type, or client...">
+        </div>
+    </div>
 
     {% if users %}
     <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr>
+                    <th>Type</th>
                     <th>ID</th>
-                    <th>Username</th>
+                    <th>Username/Email</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Client</th>
                     <th>Status</th>
+                    <th>Last Login</th>
                     <th>Created</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="usersTableBody">
                 {% for user in users %}
-                <tr>
+                <tr class="user-row" data-search="{{ ((user.username or user.email) + ' ' + (user.name or '') + ' ' + user.email + ' ' + (user.role or '') + ' ' + (user.user_type or '') + ' ' + (user.client.company_name if user.client and user.client.company_name else '')).lower() }}">
+                    <td>
+                        <span class="badge badge-{{ 'info' if user.user_type == 'team' else 'primary' }}">
+                            {{ 'Team' if user.user_type == 'team' else 'Client' }}
+                        </span>
+                    </td>
                     <td>{{ user.id }}</td>
-                    <td><code>{{ user.username }}</code></td>
-                    <td>{{ user.name }}</td>
+                    <td><code>{{ user.username or user.email }}</code></td>
+                    <td>{{ user.name or 'N/A' }}</td>
                     <td>{{ user.email }}</td>
-                    <td><span class="badge badge-{{ 'primary' if user.role == 'admin' else 'secondary' }}">{{ user.role }}</span></td>
+                    <td>
+                        {% if user.user_type == 'team' %}
+                            <span class="badge badge-{{ 'primary' if user.role == 'admin' else 'secondary' }}">{{ user.role }}</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Client Portal</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.client and user.client.company_name %}
+                            <a href="{{ url_for('admin_clients') }}#client-{{ user.client.id }}">{{ user.client.company_name }}</a>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <span class="badge badge-{{ 'success' if user.active else 'secondary' }}">
                             {{ 'Active' if user.active else 'Inactive' }}
                         </span>
+                    </td>
+                    <td>
+                        {% if user.last_login %}
+                            {{ user.last_login[:10] }}
+                        {% else %}
+                            <span class="text-muted">Never</span>
+                        {% endif %}
                     </td>
                     <td>{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
                 </tr>
@@ -62,10 +97,43 @@
             </tbody>
         </table>
     </div>
+    <div class="table-footer">
+        <p id="userCount">Total: {{ users|length }} user{{ 's' if users|length != 1 else '' }}</p>
+    </div>
     {% else %}
     <div class="empty-state">
         <p>No users found</p>
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('userSearch');
+    const tableBody = document.getElementById('usersTableBody');
+    const countElement = document.getElementById('userCount');
+    
+    if (searchInput && tableBody) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const rows = tableBody.querySelectorAll('.user-row');
+            
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const searchData = row.getAttribute('data-search') || '';
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            if (countElement) {
+                countElement.textContent = `Showing ${visibleCount} of ${rows.length} user${rows.length !== 1 ? 's' : ''}${searchTerm ? ` (filtered by "${searchTerm}")` : ''}`;
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

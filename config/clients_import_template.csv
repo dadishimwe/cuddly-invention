@@ -1,0 +1,4 @@
+company_name,service_line_id,primary_contact_name,primary_contact_email,primary_contact_phone,status,service_start_date,billing_address,service_address,installation_date,technician_name,installation_address,peplink_router_installed,peplink_model,peplink_serial_number,starlink_dish_serial,installation_notes,portal_account_email,portal_account_password,portal_account_name
+Akagera Aviation,SL-3263656-24358-78,IT Manager,it@akageraaviation.com,+250788123456,active,2024-10-15,123 Main St Kigali,123 Main St Kigali,2024-10-15,John Doe,123 Main St Kigali,true,Balance 20X,PEP-12345,DISH-67890,Initial installation,admin@akageraaviation.com,SecurePass123!,Admin User
+Akagera Aviation,SL-3263650-27699-83,IT Manager,it@akageraaviation.com,+250788123456,active,2024-10-15,123 Main St Kigali,456 Branch St Kigali,2024-10-20,John Doe,456 Branch St Kigali,true,Balance 20X,PEP-12346,DISH-67891,Second terminal installation,admin@akageraaviation.com,SecurePass123!,Admin User
+

@@ -17,6 +17,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from database.db import Database
+from database.db_v2 import DatabaseV2
 from starlink.StarlinkClient import StarlinkClient
 from scripts.send_report import EmailReportGenerator
 
@@ -27,6 +28,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 # Initialize database
 db_path = os.getenv('STARLINK_DB_PATH') or None
 db = Database(db_path)
+db_v2 = DatabaseV2(db_path)  # For v2 features
 
 # Initialize Starlink client (lazy load)
 _starlink_client = None
@@ -397,9 +399,100 @@ def view_usage(service_line_id):
 @app.route('/admin/users')
 @admin_required
 def admin_users():
-    """Manage team members (admin only)"""
-    users = db.get_all_team_members(active_only=False)
-    return render_template('admin_users.html', users=users)
+    """Manage team members and client portal users (admin only)"""
+    # Get team members
+    team_members = db.get_all_team_members(active_only=False)
+    
+    # Enrich team members with client information (if they have associated client accounts)
+    for user in team_members:
+        # Check if this user email matches any client portal account
+        with db_v2.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT c.id, c.company_name
+                FROM clients c
+                JOIN client_accounts ca ON c.id = ca.client_id
+                WHERE ca.email = ?
+                LIMIT 1
+            """, (user['email'],))
+            client = cursor.fetchone()
+            if client:
+                user['client'] = db_v2._dict_from_row(client)
+            else:
+                user['client'] = None
+            user['user_type'] = 'team'
+    
+    # Get client portal accounts
+    client_users = []
+    with db_v2.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT ca.id, ca.email, ca.name, ca.active, ca.last_login, ca.created_at,
+                   c.id as client_id, c.company_name
+            FROM client_accounts ca
+            JOIN clients c ON ca.client_id = c.id
+            ORDER BY ca.created_at DESC
+        """)
+        for row in cursor.fetchall():
+            user_dict = db_v2._dict_from_row(row)
+            user_dict['user_type'] = 'client'
+            user_dict['username'] = user_dict['email']  # For display
+            user_dict['role'] = 'client'
+            user_dict['client'] = {
+                'id': user_dict['client_id'],
+                'company_name': user_dict['company_name']
+            }
+            client_users.append(user_dict)
+    
+    # Combine team members and client users
+    all_users = team_members + client_users
+    
+    return render_template('admin_users.html', users=all_users)
+
+
+@app.route('/admin/clients')
+@admin_required
+def admin_clients():
+    """View all clients with their service lines and accounts"""
+    # Get all clients
+    clients = db_v2.get_all_clients()
+    
+    # Enrich with service lines and accounts for each client
+    for client in clients:
+        # Get service lines
+        service_lines = db_v2.get_client_service_lines(client['id'])
+        client['service_lines'] = service_lines
+        client['service_lines_count'] = len(service_lines)
+        
+        # Get portal accounts
+        with db_v2.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, email, name, active, last_login, created_at
+                FROM client_accounts
+                WHERE client_id = ?
+                ORDER BY created_at DESC
+            """, (client['id'],))
+            accounts = [db_v2._dict_from_row(row) for row in cursor.fetchall()]
+            client['accounts'] = accounts
+            client['accounts_count'] = len(accounts)
+        
+        # Get primary contact
+        with db_v2.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT name, email, phone, role
+                FROM client_contacts
+                WHERE client_id = ? AND is_primary = 1 AND active = 1
+                LIMIT 1
+            """, (client['id'],))
+            contact = cursor.fetchone()
+            if contact:
+                client['primary_contact'] = db_v2._dict_from_row(contact)
+            else:
+                client['primary_contact'] = None
+    
+    return render_template('admin_clients.html', clients=clients)
 
 
 @app.route('/admin/add-user', methods=['POST'])

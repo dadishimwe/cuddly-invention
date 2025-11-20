@@ -70,3 +70,43 @@ document.querySelectorAll('.table th').forEach((th, index) => {
         sortTable(table, index, newOrder === 'asc');
     });
 });
+
+// Mobile navigation toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.getElementById('navMenu');
+    
+    if (navToggle && navMenu) {
+        navToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            // Update toggle icon
+            navToggle.textContent = navMenu.classList.contains('active') ? '✕' : '☰';
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                navToggle.textContent = '☰';
+            }
+        });
+        
+        // Close menu when clicking a nav link (mobile/tablet)
+        navMenu.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 1024) {
+                    navMenu.classList.remove('active');
+                    navToggle.textContent = '☰';
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) {
+                navMenu.classList.remove('active');
+                navToggle.textContent = '☰';
+            }
+        });
+    }
+});
