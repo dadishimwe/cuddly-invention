@@ -25,6 +25,10 @@ app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 
+# Chatwoot configuration
+app.config['CHATWOOT_WEBSITE_TOKEN'] = os.getenv('CHATWOOT_WEBSITE_TOKEN')
+app.config['CHATWOOT_BASE_URL'] = os.getenv('CHATWOOT_BASE_URL', 'https://app.chatwoot.com')
+
 # Initialize database
 db_path = os.getenv('STARLINK_DB_PATH') or None
 db = Database(db_path)
@@ -68,6 +72,12 @@ def admin_required(f):
 
 
 # Routes
+@app.route('/health')
+def health():
+    """Health check endpoint for Docker"""
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()}), 200
+
+
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -493,6 +503,66 @@ def admin_clients():
                 client['primary_contact'] = None
     
     return render_template('admin_clients.html', clients=clients)
+
+
+@app.route('/admin/edit-client/<int:client_id>', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_client(client_id):
+    """Edit client details including email mappings"""
+    client = db_v2.get_client(client_id)
+    if not client:
+        flash('Client not found', 'error')
+        return redirect(url_for('admin_clients'))
+    
+    if request.method == 'POST':
+        try:
+            # Update client basic info
+            with db_v2.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE clients
+                    SET company_name = ?,
+                        billing_address = ?,
+                        service_address = ?,
+                        status = ?
+                    WHERE id = ?
+                """, (
+                    request.form.get('company_name'),
+                    request.form.get('billing_address'),
+                    request.form.get('service_address'),
+                    request.form.get('status', 'active'),
+                    client_id
+                ))
+                conn.commit()
+            
+            # Update primary contact email
+            primary_email = request.form.get('primary_email')
+            if primary_email:
+                with db_v2.get_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        UPDATE client_contacts
+                        SET email = ?
+                        WHERE client_id = ? AND is_primary = 1
+                    """, (primary_email, client_id))
+                    conn.commit()
+            
+            flash('Client updated successfully', 'success')
+            return redirect(url_for('admin_clients'))
+        except Exception as e:
+            flash(f'Error updating client: {str(e)}', 'error')
+    
+    # Get client contacts
+    with db_v2.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM client_contacts
+            WHERE client_id = ?
+            ORDER BY is_primary DESC, created_at
+        """, (client_id,))
+        contacts = [db_v2._dict_from_row(row) for row in cursor.fetchall()]
+    
+    return render_template('admin_edit_client.html', client=client, contacts=contacts)
 
 
 @app.route('/admin/add-user', methods=['POST'])

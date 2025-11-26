@@ -15,6 +15,7 @@ from tabulate import tabulate
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from database.db import Database
+from database.db_v2 import DatabaseV2
 
 
 def list_service_lines(db: Database, active_only: bool = True):
@@ -142,6 +143,27 @@ def view_report_logs(db: Database, limit: int = 50):
     print(f"\nShowing {len(logs)} most recent log(s)")
 
 
+def init_database(v2: bool = False):
+    """Initialize database with schema"""
+    print("\n" + "="*60)
+    print("DATABASE INITIALIZATION")
+    print("="*60)
+    
+    if v2:
+        print("Initializing with v2 schema...")
+        db = DatabaseV2()
+        # The DatabaseV2 constructor automatically creates tables
+        print("✅ Database initialized with v2 schema")
+    else:
+        print("Initializing with v1 schema...")
+        db = Database()
+        # The Database constructor automatically creates tables
+        print("✅ Database initialized with v1 schema")
+    
+    print("Database ready at:", db.db_path)
+    print("="*60)
+
+
 def add_service_line_interactive(db: Database):
     """Interactively add a service line"""
     print("\n" + "="*60)
@@ -245,11 +267,17 @@ Examples:
     parser.add_argument(
         'command',
         choices=[
-            'list-service-lines', 'list-mappings', 'view-mapping',
+            'init', 'list-service-lines', 'list-mappings', 'view-mapping',
             'add-service-line', 'add-mapping', 'logs',
             'activate-mapping', 'deactivate-mapping'
         ],
         help='Command to execute'
+    )
+    
+    parser.add_argument(
+        '--v2',
+        action='store_true',
+        help='Use v2 schema (for init command)'
     )
     
     parser.add_argument(
@@ -279,10 +307,14 @@ Examples:
     
     args = parser.parse_args()
     
-    # Initialize database
-    db = Database(args.db)
-    
     try:
+        if args.command == 'init':
+            init_database(v2=args.v2)
+            return
+        
+        # Initialize database for other commands
+        db = Database(args.db)
+        
         if args.command == 'list-service-lines':
             list_service_lines(db, active_only=not args.all)
         

@@ -23,6 +23,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'change-this-in-production')
 
+# Chatwoot configuration
+app.config['CHATWOOT_WEBSITE_TOKEN'] = os.getenv('CHATWOOT_WEBSITE_TOKEN')
+app.config['CHATWOOT_BASE_URL'] = os.getenv('CHATWOOT_BASE_URL', 'https://app.chatwoot.com')
+
 # Initialize database
 db = DatabaseV2()
 
@@ -46,6 +50,17 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+@app.route('/health')
+def health():
+    """Health check endpoint for Docker"""
+    from flask import jsonify
+    return jsonify({'status': 'healthy', 'service': 'client_portal'}), 200
 
 
 # ============================================================================

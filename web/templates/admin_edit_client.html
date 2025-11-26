@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Client - {{ client.company_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>✏️ Edit Client</h2>
+        <p class="text-muted">Update client information and email mappings</p>
+    </div>
+    <div>
+        <a href="{{ url_for('admin_clients') }}" class="btn btn-secondary">← Back to Clients</a>
+    </div>
+</div>
+
+<div class="form-container">
+    <form method="post">
+        <h3>Basic Information</h3>
+        
+        <div class="form-group">
+            <label for="company_name">Company Name *</label>
+            <input type="text" id="company_name" name="company_name" value="{{ client.company_name }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="active" {% if client.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="suspended" {% if client.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                <option value="cancelled" {% if client.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="billing_address">Billing Address</label>
+            <textarea id="billing_address" name="billing_address" rows="3">{{ client.billing_address or '' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="service_address">Service Address</label>
+            <textarea id="service_address" name="service_address" rows="3">{{ client.service_address or '' }}</textarea>
+        </div>
+        
+        <h3 style="margin-top: 2rem;">Primary Contact Email</h3>
+        
+        <div class="form-group">
+            <label for="primary_email">Primary Email *</label>
+            <input type="email" id="primary_email" name="primary_email" 
+                   value="{% if contacts %}{{ contacts[0].email }}{% endif %}" required>
+            <small class="text-muted">Main contact email for reports and portal access</small>
+        </div>
+        
+        {% if contacts|length > 1 %}
+        <h3 style="margin-top: 2rem;">Additional Contacts</h3>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts[1:] %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.email or 'N/A' }}</td>
+                        <td>{{ contact.phone or 'N/A' }}</td>
+                        <td>{{ contact.role or 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        <div class="form-actions" style="margin-top: 2rem;">
+            <a href="{{ url_for('admin_clients') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+h3 {
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.data-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
